@@ -74,3 +74,40 @@ async def eliminar_producto(codigo):
 
         await guardar_base_datos(nuevos_datos)
         return True
+
+async def alerta_stock_bajo(codigo, nombre, stock_actual):
+    await asyncio.sleep(2)
+    print(f"⚠️ ALERTA CRÍTICA: El producto {nombre} ({codigo}) ha bajado a {stock_actual} unidades. Solicitar restock inmediato.")
+
+async def vender_producto(codigo, cantidad_vendida):
+    async with db_lock:
+        datos = await leer_base_datos()
+        producto_encontrado = None
+
+        for dato in datos:
+            if dato["codigo"] == codigo:
+                producto_encontrado = dato
+                break
+
+        if producto_encontrado is None:
+            raise KeyError("Producto no encontrado")
+
+        if cantidad_vendida > producto_encontrado["stock"]:
+            raise ValueError("Stock insuficiente")
+
+        producto_encontrado["stock"] -= cantidad_vendida
+        await guardar_base_datos(datos)
+
+        stock_actual = producto_encontrado["stock"]
+        nombre = producto_encontrado["nombre"]
+
+        if stock_actual < 3:
+            asyncio.create_task(alerta_stock_bajo(codigo, nombre, stock_actual))
+
+        return {
+            "mensaje": "Venta exitosa",
+            "codigo": codigo,
+            "nombre": nombre,
+            "cantidad_vendida": cantidad_vendida,
+            "stock_actual": stock_actual
+        }

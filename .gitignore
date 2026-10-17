@@ -1,1 +1,4 @@
 ignorar/
+
+__pycache__/
+*.pyc

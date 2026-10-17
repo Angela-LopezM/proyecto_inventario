@@ -1,7 +1,7 @@
 import asyncio 
 
 # Importar funciones de otro archivo
-from database import crear_producto, obtener_producto, actualizar_stock, eliminar_producto
+from database import crear_producto, obtener_producto, actualizar_stock, eliminar_producto, vender_producto
 
 async def prueba_de_estres():
     print("--- Iniciando prueba ---")
@@ -29,4 +29,30 @@ async def prueba_de_estres():
     except Exception as e:
         print("Error en operaciones mixtas.")
 
-asyncio.run(prueba_de_estres())
+async def procesar_venta(codigo, cantidad_vendida):
+    try:
+        resultado = await vender_producto(codigo, cantidad_vendida)
+        print(f"VENTA: {resultado}")
+    except KeyError as e:
+        print(f"ERROR: {e}")
+    except ValueError as e:
+        print(f"ERROR: {e}")
+
+async def prueba_ventas():
+    print("\n--- PRUEBA DE ESTRÉS: VENTAS ---")
+    ventas = [
+        procesar_venta("M001", 2),
+        procesar_venta("M002", 24),
+        procesar_venta("M003", 60),
+        procesar_venta("M003", 10)
+    ]
+
+    await asyncio.gather(*ventas)
+    await asyncio.sleep(2)
+    print("--- FIN DE LAS VENTAS ---")
+
+async def main():
+    await prueba_de_estres()
+    await prueba_ventas()
+
+asyncio.run(main())
