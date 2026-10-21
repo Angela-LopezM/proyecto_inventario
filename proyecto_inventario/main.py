@@ -36,3 +36,18 @@ async def buscar_un_producto(codigo_producto: str):
         return producto
     except KeyError:
         raise HTTPException(status_code=404, detail="El producto solicitado no existe en la BD")
+
+@apiRest.get("/categorias")
+async def listar_categorias():
+    datos = await leer_base_datos()
+    categorias = set()
+
+@apiRest.get("/alertas/stock")
+async def stock_critico():
+    datos = await leer_base_datos()
+    productos_criticos = []
+
+@apiRest.get("/productos/buscar/{palabra_clave}")
+async def buscar_por_nombre(palabra_clave: str):
+    datos = await leer_base_datos()
+    productos_encontrados = []
