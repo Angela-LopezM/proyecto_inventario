@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from database import leer_base_datos, obtener_producto
+from database import leer_base_datos, obtener_producto, guardar_base_datos
+from schemas import ProductoCreate
 
 # Inicializar la aplicación
 apiRest = FastAPI(
@@ -51,3 +52,36 @@ async def stock_critico():
 async def buscar_por_nombre(palabra_clave: str):
     datos = await leer_base_datos()
     productos_encontrados = []
+
+@apiRest.post("/productos", status_code="201")
+async def registrar_nuevo_producto(producto: ProductoCreate):
+    datos = await leer_base_datos()
+
+    # 1. Validar que el producto no exista
+    for dato in datos:
+        if dato["codigo"] == producto.codigo:
+            raise HTTPException(status_code=400, detail="El codigo de producto ya exixte.")
+
+    # 2. Convertir la clase a un diccionario
+    nuevo_producto = producto.model_dump()
+
+    # 3. Guardar
+    datos.append(nuevo_producto)
+    await guardar_base_datos(datos)
+
+    return {"mensaje": "Producto registrado correctamente", "Producto": nuevo_producto}
+
+# Put, actulizar inventario
+@apiRest.put("/productos/{codigo_producto}")
+async def actualizar_producto(codigo_producto: str, producto_actualizado: ProductoCreate):
+    datos = await leer_base_datos()
+    for posicion, dato in enumerate(datos):
+        if dato["codigo"] == codigo_producto:
+            # Reemplazamos los datos manteniendo el codigo
+            datos[posicion] = producto_actualizado.model_dump()
+            datos[posicion]["codigo"] = codigo_producto
+
+            await guardar_base_datos(datos)
+            return {"mensaje": "Producto actualizado", "producto": datos[posicion]}
+
+        raise HTTPException(status_code=404, detail="Producto no encontrado")

@@ -1,8 +1,11 @@
 [
     {
         "codigo": "M001",
-        "nombre": "Llanta trasera",
-        "stock": 6
+        "nombre": "Llanta Pirelli Diablo Rosso 4",
+        "categoria": "Llantas",
+        "precio": 850000.0,
+        "stock": 10,
+        "compatible_con": "Rin 17"
     },
     {
         "codigo": "M002",
@@ -12,6 +15,12 @@
     {
         "codigo": "M003",
         "nombre": "Buj\u00eda",
-        "stock": 40
+        "categoria": "Ignicion",
+        "precio": 50000.0,
+        "stock": 15,
+        "compatible_con": [
+            "Motos",
+            "Carros"
+        ]
     }
 ]
