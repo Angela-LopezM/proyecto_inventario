@@ -2,3 +2,5 @@ ignorar/
 
 __pycache__/
 *.pyc
+
+taller_mecanico/
