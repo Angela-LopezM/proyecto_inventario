@@ -3,7 +3,7 @@ import aiofiles
 import asyncio
 # module.exports
 
-ARCHIVO_BD = "inventario.json"
+ARCHIVO_BD = "taller.json"
 db_lock = asyncio.Lock()
 
 async def leer_base_datos():

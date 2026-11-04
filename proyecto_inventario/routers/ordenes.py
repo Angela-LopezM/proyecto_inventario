@@ -6,13 +6,20 @@ from database import leer_base_datos, guardar_base_datos
 router = APIRouter(prefix="/ordenes", tags=["Gestionar ordenes"])
 
 @router.get("/")
-async def obtener_ordenes(estado: Optional[str] = None):
+async def obtener_ordenes(
+    estado: Optional[str] = Query(None, description="Filtrar por estado"),
+    modelo: Optional[str] = Query(None, description="Filtrar por modelo ej: Bajaj"),
+    costo_minimo: Optional[float] = Query(None, ge=0, description="Costo minimo")
+):
     datos = await leer_base_datos()
 
     # Si el cliente envia un estado:
-    if estado: # Si el estado contiene algo va a ser true, sino va a ser false
-        datos_filtrados = [orden for orden in datos if orden["estado"].lower() == estado.lower()]
-        return {"total_ordenes": len(datos_filtrados), "ordenes": datos_filtrados}
+    if estado:
+        datos = [o for o in datos if o["estado"].lower() == estado.lower()]
+    if modelo:
+        datos = [o for o in datos if modelo.lower() in o["modelo"].lower()]
+    if costo_minimo is not None:
+        datos = [o for o in datos if o.get("costo_reparacion", 0) >= costo_minimo]
 
     return {"total_ordenes": len(datos), "ordenes": datos}
 
@@ -32,7 +39,7 @@ async def crear_orden(orden: OrdenCreate):
     nueva_orden["estado"] = "En diagnóstico"
     nueva_orden["costo_reparacion"] = 0.0
 
-    datos.routerend(nueva_orden)
+    datos.append(nueva_orden)
     await guardar_base_datos(datos)
 
     return {"mensaje": "Orden creada exitosamente", "orden": nueva_orden}
@@ -78,7 +85,7 @@ async def eliminar_orden(placa: str):
 
     # for orden in datos:
     #     if orden["placa"] != placa:
-    #         datos_filtrados.routerend(orden)
+    #         datos_filtrados.append(orden)
 
     datos_filtrados = [orden for orden in datos if orden["placa"] != placa]
 
@@ -102,3 +109,4 @@ async def actualizacion_parcial(placa: str, orden_patch: OrdenPatch):
 
             await guardar_base_datos(datos)
             return {"mesaje": "La orden ha sido actualizada con los siguientes datos", "orden": datos[i]}
+        raise HTTPException(status_code=404, detail="La orden no existe.")
