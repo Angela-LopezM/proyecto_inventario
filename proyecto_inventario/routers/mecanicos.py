@@ -47,7 +47,7 @@ async def crear_mecanico(
 
     nuevo_id = 1
     for item in datos:
-        if item["id"] >= nuevi_id:
+        if item["id"] >= nuevo_id:
             nuevo_id = item["id"] + 1
 
     nuevo_mecanico = mecanico.model_dump()
