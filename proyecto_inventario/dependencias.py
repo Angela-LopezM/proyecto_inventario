@@ -15,3 +15,13 @@ async def simular_base_datos():
     print("1. [DEPENDENCIA] Abriendo la conexión con el Json...")
     yield "Conexión está lista"
     print("3. [DEPENDENCIA] Cerrando archivo Json y liberando memoria...")
+
+async def verificar_gerente(x_role: str = Header(...)):
+    if x_role != "Gerente":
+        raise HTTPException(status_code=403, detail="Acceso denegado, no tiene permisos de Gerente")
+    return x_role
+
+async def verificar_auditor(x_role: str = Header(...)):
+    if x_role != "Gerente" and x_role != "Auditor":
+        raise HTTPException(status_code="Acceso denegado, no tiene permisos de Auditor")
+    return x_role
