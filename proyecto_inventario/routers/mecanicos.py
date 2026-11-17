@@ -1,77 +1,31 @@
-import json
-import aiofiles
-from fastapi import APIRouter, Depends, HTTPException
-from schemas import MecanicoCreate
-from dependencias import verificar_auditor, verificar_gerente, parametros_paginacion
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from core.database import obtener_bd
+from models.mecanico import Mecanico
+from schemas.schemas import MecanicoCreate, MecanicoResponse
 
-router = APIRouter(prefix="/mecanicos", tags=["Gestionar mecanicos"])
+router = APIRouter(prefix="/mecanicos", tags=["Mecanicos"])
 
-ARCHIVO_MECANICOS = "mecanicos.json"
-
-async def leer_mecanicos():
-    try:
-        async with aiofiles.open(ARCHIVO_MECANICOS, mode="r", encoding="utf-8") as archivo:
-            contenido = await archivo.read()
-            return json.loads(contenido)
-    except FileNotFoundError:
-        return []
-
-async def guardar_mecanicos(datos):
-    async with aiofiles.open(ARCHIVO_MECANICOS, mode="w", encoding="utf-8") as archivo:
-        await archivo.write(json.dumps(datos, indent=4, ensure_ascii=False))
-
-@router.get("")
-async def obtener_mecanicos(
-    paginacion: dict = Depends(parametros_paginacion),
-    rol: str = Depends(verificar_auditor)
-):
-    datos = await leer_mecanicos()
-
-    skip = paginacion["skip"]
-    limit = paginacion["skip"]
-    datos_paginados = datos[skip:skip + limit]
-
-    return {
-        "total_mecanicos": len(datos),
-        "mostrando": len(datos_paginados),
-        "skip": skip,
-        "mecanicos": datos_paginados
-    }
-
-@ router.post("", status_code=201)
+@router.post("", response_model=MecanicoResponse, status_code=201)
 async def crear_mecanico(
     mecanico: MecanicoCreate,
-    rol : str = Depends(verificar_gerente)
+    db: AsyncSession = Depends(obtener_bd)
 ):
-    datos = await leer_mecanicos()
+    nuevo_mecanico = Mecanico(**mecanico.model_dump())
 
-    nuevo_id = 1
-    for item in datos:
-        if item["id"] >= nuevo_id:
-            nuevo_id = item["id"] + 1
+    db.add(nuevo_mecanico)
+    await db.commit()
+    await db.refresh(nuevo_mecanico)
 
-    nuevo_mecanico = mecanico.model_dump()
-    nuevo_mecanico["id"] = nuevo_id
+    return nuevo_mecanico
 
-    datos.append(nuevo_mecanico)
-    await guardar_mecanicos(datos)
-
-    return {
-        "mensaje": "Mecanico creado exitosamente",
-        "mecanico": nuevo_mecanico
-    }
-
-@router.delete("/{id}")
-async def eliminar_mecanico(
-    id: int,
-    rol: str = Depends(verificar_gerente)
+@router.get("", response_model=list[MecanicoResponse])
+async def obtener_mecanicos(
+    db: AsyncSession = Depends(obtener_bd)
 ):
-    datos = await leer_mecanicos()
-    nuevos_datos = [mecanico for mecanico in datos if mecanico["id"] != id]
+    sentencia = select(Mecanico)
+    resultado = await db.execute(sentencia)
+    mecanicos = resultado.scalars().all()
 
-    if len(datos) == len(nuevos_datos):
-        raise HTTPException(status_code=404, detail="Mecanico no encontrado")
-
-    await guardar_mecanicos(nuevos_datos)
-
-    return {"mensaje": "Mecanico eliminado exitosamente", "id": id}
+    return mecanicos

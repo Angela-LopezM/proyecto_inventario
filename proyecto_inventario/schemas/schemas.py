@@ -29,3 +29,42 @@ class MecanicoCreate(BaseModel):
     nombre: str = Field(..., min_length=2, description="Nombre del Mecanico")
     especialidad: str = Field(..., min_length=2, description="Especialidad del Mecanico")
     salario: float = Field(..., ge=0, description="Salario del Mecanico")
+
+class OrdenResponse(BaseModel):
+    id: int
+    estado: str
+    costo_reparacion: float
+
+    # Para que entienda ORM
+    model_config = {"from_attributes": True}
+
+class MecanicoCreate(BaseModel):
+    documento: str
+    nombre_completo: str
+    especialidad: str
+
+class MecanicoResponse(BaseModel):
+    id: int
+    documento: str
+    nombre_completo: str
+    especialidad: str
+    activo: bool
+
+    model_config = {"from_attributes": True}
+
+class RepuestoCreate(BaseModel):
+    codigo_sku: str
+    nombre: str
+    precio_compra: float
+    precio_venta: float
+    stock_actual: int
+
+class RepuestoResponse(BaseModel):
+    id: int
+    codigo_sku: str
+    nombre: str
+    precio_compra: float
+    precio_venta: float
+    stock_actual: int
+
+    model_config = {"from_attributes": True}
