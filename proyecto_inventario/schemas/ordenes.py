@@ -1,11 +1,12 @@
 from pydantic import BaseModel, Field, model_validator
-from typing import Optional # Para campos que pueden estar vacios
+from typing import Optional
 
 # Lo que entra cuando llega la moto
 class OrdenCreate(BaseModel):
     placa: str = Field(..., min_length=5, max_length=6, description="Placa de la moto (sin espacios)")
     modelo: str = Field(..., description="Marca y modelo. Ej: Bajaj Dominar 400")
     falla_reportada: str = Field(..., description="Descripción del problema por el cliente")
+    mecanico_id: int
 
 # Lo que entra cuando el mecánico actualiza la orden
 class OrdenUpdate(BaseModel):
@@ -25,46 +26,34 @@ class OrdenPatch(BaseModel):
     costo_reparacion: Optional[float] = Field(None, ge=0)
     falla_reportada: Optional[str] = None
 
-class MecanicoCreate(BaseModel):
-    nombre: str = Field(..., min_length=2, description="Nombre del Mecanico")
-    especialidad: str = Field(..., min_length=2, description="Especialidad del Mecanico")
-    salario: float = Field(..., ge=0, description="Salario del Mecanico")
+class MecanicoResumen(BaseModel):
+    id: int
+    nombre_completo: str
+    especialidad: Optional[str] = None
+
+    model_config = {"from_attributes": True}
 
 class OrdenResponse(BaseModel):
     id: int
+    placa: str
+    modelo: str
+    falla_reportada: Optional[str] = None
     estado: str
     costo_reparacion: float
+
+    mecanico: Optional[MecanicoResumen] = None
 
     # Para que entienda ORM
     model_config = {"from_attributes": True}
 
-class MecanicoCreate(BaseModel):
-    documento: str
-    nombre_completo: str
-    especialidad: str
+class AgregarRepuestoOrden(BaseModel):
+    repuesto_id: int
+    cantidad: int = Field(..., gt=0, description="Debe agregar al menos 1 unidad")
 
-class MecanicoResponse(BaseModel):
+class RepuestoEnOrdenResponse(BaseModel):
     id: int
-    documento: str
-    nombre_completo: str
-    especialidad: str
-    activo: bool
-
-    model_config = {"from_attributes": True}
-
-class RepuestoCreate(BaseModel):
-    codigo_sku: str
-    nombre: str
-    precio_compra: float
-    precio_venta: float
-    stock_actual: int
-
-class RepuestoResponse(BaseModel):
-    id: int
-    codigo_sku: str
-    nombre: str
-    precio_compra: float
-    precio_venta: float
-    stock_actual: int
+    repuesto_id: int
+    cantidad: int
+    precio_unitario_historico: float
 
     model_config = {"from_attributes": True}

@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, ForeignKey
 from core.database import Base
+from sqlalchemy.orm import relationship
 
 class Orden(Base):
     __tablename__ = "ordenes"
@@ -12,4 +13,7 @@ class Orden(Base):
     estado = Column(String(20), default="En diagnóstico")
     costo_reparacion = Column(Float, default=0.0)
 
-    mecanico_id = Column(Integer, ForeignKey())
+    mecanico_id = Column(Integer, ForeignKey("mecanicos.id"), nullable=True)
+
+    mecanico = relationship("Mecanico", back_populates="ordenes")
+    repuestos_usados = relationship("OrdenRepuesto", back_populates="orden", cascade="all, delete-orphan")

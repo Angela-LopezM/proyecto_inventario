@@ -1,26 +1,28 @@
 from fastapi import FastAPI, Depends
 from contextlib import asynccontextmanager
-from dependencias import simular_base_datos
 from routers.ordenes import router as router_ordenes
 from routers.mecanicos import router as router_mecanicos
 from routers.repuestos import router as router_repuestos
-from models.orden import Orden
-from models.orden import Orden
-from models.mecanico import Mecanico
-from models.repuesto import Repuesto
+from dependencias import simular_base_datos
 from core.config import settings
+from models.orden import Orden
+from models.repuesto import Repuesto
+from models.mecanico import Mecanico
+from models.orden_repuesto import OrdenRepuesto
 from core.database import engine, Base
 
 # Lifespan: código que se ejecuta antes de que FastAPI arranque
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Lop que pasa al encender el server
+    # Lo que pasa al encender el server
     print("---Conectando con la bd y creando las tablas---")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     print("Base de datos lista.")
+
     yield
+
     print("Apagando el servidor y limpiando recursos.")
 
 app = FastAPI(
@@ -30,8 +32,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-app.include_router(router_ordenes)
 app.include_router(router_mecanicos)
+app.include_router(router_ordenes)
 app.include_router(router_repuestos)
 
 @app.get("/prueba-yield")
